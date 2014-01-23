@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no" name="viewport" id="viewport" />
+<link href="css/chunj_style.css" type="text/css" rel="stylesheet">
+<title>浙江电信</title>
+</head>
+
+<body>
+<div class="header">
+	<div class="header_left"><a href="javascript:history.back();"><strong>&lt;&lt;</strong>返回</a></div>
+	<div class="header_center"><a>春节活动</a></div>
+    <div class="header_right"><a href="http://x.zj189.cn/chunjie">主页<strong>&gt;&gt;</strong></a></div>
+</div>
+<div class="mainbox">
+    <div class="qrdg_main">
+    	<span>
+            <b>尊敬的<i id="phoneHided"></i>用户：</b>
+            <em><%=okInfo%></em>
+           <a href="http://x.zj189.cn/chunjie"><img src="images/goback_back.png"></a>
+        </span>
+    
+    
+    </div>
+</div>
+<div class="bottom_box"><div class="bottom"><a href="#top">TOP▲</a><br>
+中国电信版权所有【浙ICP备12014759号-1】</div></div>
+
+<script type="text/javascript">
+    var phoneNumber = sessionStorage.getItem('PhoneNumber');
+    document.getElementById('phoneHided').innerText = phoneNumber.substr(0, 3) + '****' + phoneNumber.substr(7);
+</script>
+
+</body>
+</html>

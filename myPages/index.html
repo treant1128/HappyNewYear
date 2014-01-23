@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no" name="viewport" id="viewport" />
+<link rel="shortcut icon" type="image/x-png" href="gnu.png" media="screen" />
+<link href="css/chunj_style.css" type="text/css" rel="stylesheet">
+<title>浙江电信</title>
+</head>
+
+<body>
+<div class="header">
+	<div class="header_left"><a href="javascript:history.back();"><strong>&lt;&lt;</strong>返回</a></div>
+    <div class="header_center"><a>春节活动</a></div>
+    <div class="header_right"><a href="http://x.zj189.cn/chunjie">主页<strong>&gt;&gt;</strong></a></div>
+</div>
+<div class="mainbox">
+	<div class="main">
+    	<div class="main_one"><span class="xueyi">发奖金没？<br>有对象没？</span><span class="mashang">金钱、对象算神马？<br>我马上有<a href="http://s.zj189.cn/?fromid=chunjie">流量</a>！<br>够酷吧！</span></div>
+        <div class="main_two">
+        	<span>马上有流量—特惠篇</span>
+        	<ul>
+            	<li>春节七天包<br>300M<br><b>原价：60元</b><br>现价：5元<em><a href="confirm.html"><img src="images/qianggou.png" onclick="select(21)"></a></em></li>
+                <li>春节七天包<br>800M<br><b>原价：130元</b><br>现价：10元<em><a href="confirm.html"><img src="images/qianggou.png" onclick="select(22)"></a></em></li>
+            </ul>
+        </div>
+        <div class="main_two main_three">
+        	<span>马上有流量—赠送篇</span>
+            <span class="zengsp_cont"><b>成功订购春节7天包的童鞋，即可获领10M免费流量。省了那么多，还要额外送？欲购从速，快像森碟一样飞起来行动吧！</b></span>
+        
+        </div>
+        <div class="mainfour"><span>温馨提示：<br>
+1.活动时间为2014年1月24日至2月6日。<br>
+2.活动仅限流量版用户参与。<br>
+3.春节七天包在活动开始后就可以订购，流量使用有效期为2014年1月31日0:00至2月6日23:59，仅限省内可用。<br>
+4.赠送的免费流量仅省内可用，在春节包订购成功后48小时内生效，生效当月有效，次月失效。<br>
+5.春节包可以重复订购，叠加使用。<br>
+6.免费流量不限制赠送次数，多订多领<br>
+7.最重要的是，春节聚会，固然珍贵，可是要注意饮食健康，切勿贪杯暴食哦~</span></div>
+    </div>
+
+
+</div>
+<div class="bottom_box"><div class="bottom"><a href="#top">TOP▲</a><br>
+中国电信版权所有【浙ICP备12014759号-1】</div></div>
+<!-- 用于TTL验证归来的直接确认 订单成功后需给Redis的UserSecret的TTL清零  故需传额外的secret和info-->
+<form id="myForm" action="./execOrder" method="post">
+    <input id="phoneNumber" name="phone" type="hidden" />
+    <input id="orderType" name="type" type="hidden" />
+    <input id="userSecret" name="secret" type="hidden" />
+    <input id="ttlInfo" name="info" type="hidden" />
+</form>
+
+<script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var phone = '<%=phone%>';
+    sessionStorage.setItem('PhoneNumber', phone);
+    var secret = '<%=secret%>';
+    sessionStorage.setItem('UserSecret', secret);
+    var info = '<%=info%>';
+    sessionStorage.setItem('TTLInfo', info);
+
+
+    if(info != 'nothing'){    //TTL中已有记录
+        var infos = info.split('-');
+        var orderType = infos[0];
+        var flowDesc = infos[1];
+
+        if(confirm('尊敬的' + phone.substr(0, 3) + '****' + phone.substr(7) + '用户：\n\n欢迎你继续刚才未完成的订单流程!\n\n请点击下方确认键，订购' + flowDesc + '流量包！')){
+//            document.getElementById('phoneNumber').value = phone;
+//            document.getElementById('orderType').value = orderType;
+//            document.getElementById('userSecret').value = secret;
+//            document.getElementById('ttlInfo').value = info;
+//
+//            document.getElementById('myForm').submit();
+            $.post('execOrder', {phone : phone, type : orderType, secret : secret, info : info}, function(data){
+                alert(data);        
+            });
+        }else{
+            $.post('markTTL', {userSecret : secret, info : 'clear-ttl-after-verify-ok', expire : 8}, function(){
+                console.log('没获取到号码 -> 点击了订购, 但验证归来又取消了.............');        
+            });
+        }
+    }
+
+
+    function select(type){
+//        alert(type);
+        //如果是redirect就连起secret一起发送过去   因为光凭redirect无法区分出UV
+        $.post('clickType', {phone : phone != 'redirect' ? phone : phone + ':' + secret, type : type}, function(data){
+                console.log(data);
+        });
+
+        sessionStorage.setItem('OrderType', type);
+        sessionStorage.setItem('FlowDesc', type == 21 ? '5元300M' : (type == 22 ? '10元800M' : '***')); 
+        sessionStorage.setItem('JumpStatus', 'has-click-' + type);
+    };
+    
+    $(window).bind('beforeunload', function(){
+        if(sessionStorage.getItem('JumpStatus') == null){       //没有保存JumpStatus(没执行过select(type))信息的Jump Event   
+            $.post('jump', {phone : phone, userSecret : secret, jumpStatus : '空空如也'}, function(data){
+            
+            });
+        }
+    });
+</script>
+</body>
+</html>

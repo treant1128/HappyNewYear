@@ -1,0 +1,368 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>春节订购&middot;数据统计</title>
+
+    <script type="text/javascript" src="highcharts/jquery.min.js"></script>
+    <script type="text/javascript" src="js/underscore-min.js"></script>
+    <script type="text/javascript">
+      $(function () {
+        $.get("http://x.zj189.cn/chunjie/statisticsData", function(data, status){
+          console.log("status: " + status);
+
+          var rs = data[0] || {};  //   [{ ... }]
+
+          // keys   获取所有key
+          // map    映射出lastIndexOf(':') 得到所有日期
+          // uniq   去重
+          var mDays = _.uniq(_.map(_.keys(rs), function(key){ return key.substr(key.lastIndexOf(':') + 1); }));
+          console.log(mDays);
+          console.log(_.values(rs));    //values 获取所有value
+
+//之前服务端的日期格式不标准 为了排序所需 强制把2 -> 02    否则2 会排在1*前
+//          mDays = _.map(mDays, function(item){
+//                        var day = parseInt(item.substr(item.lastIndexOf('-') + 1), 10);
+//                        return item.substring(0, item.lastIndexOf('-') + 1) + (day < 10 ? '0' : '') + day;
+//                    });
+//          console.log('映射加0后的' +mDays);
+
+//Hash HGETALL得到的日期是散乱的   需要排序
+          quickSortDateString(mDays, 0, mDays.length - 1);
+
+          function quickSortDateString(dateArray, left, right){
+            if(dateArray.constructor === Array){
+              if(left < right){
+                var i=left, j=right, x=dateArray[left];
+                while(i < j){
+                  while(i< j && dateArray[j] >= x){         //从右向左找第一个小于x的
+                    j--;
+                  }
+                  if(i < j){
+                    dateArray[i++] = dateArray[j];
+                  }
+
+                  while(i < j && dateArray[i] < x){         //从左向右找第一个大于等于x的
+                    i++;
+                  }
+                  if(i < j){
+                    dateArray[j--] = dateArray[i];
+                  }
+                }
+
+                dateArray[i] = x;
+                quickSortDateString(dateArray, left, i - 1);
+                quickSortDateString(dateArray, i + 1, right);
+              }
+            }
+          }
+
+          console.log('快速排序后的' + mDays);
+
+//服务端redis.j已修复日期为标准格式   无需再反复映射
+//          mDays = _.map(mDays, function(item){
+//                    var day = parseInt(item.substr(item.lastIndexOf('-') + 1), 10);
+//                    return item.substring(0, item.lastIndexOf('-') + 1) +  day;
+//                });
+//          console.log('映射回去的' + mDays);
+
+          //13 items
+            var pvAccess = new Array(), uvAccess = new Array();
+            var pvNoNumber = new Array();
+            var pvJump = new Array(), uvJump = new Array();
+            var pvClick21 = new Array(), uvClick21 = new Array();
+            var pvClick22 = new Array(), uvClick22 = new Array();
+            var pvOrderOK21 = new Array(), pvOrderOK22 = new Array();
+            var pvPresentOK21 = new Array(), pvPresentOK22 = new Array();
+
+// pvData[i / 2].push(data[i] == null ? 0 : parseInt(data[i].hasOwnProperty(mDays[d]) ? data[i][mDays[d]] : 0, 10));
+          for(d in mDays){
+            pvAccess.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Access:' + mDays[d]) ? rs['PV:Hash_Access:' + mDays[d]] : 0, 10));
+            uvAccess.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('UV:Set_Access:' + mDays[d]) ? rs['UV:Set_Access:' + mDays[d]] : 0, 10));
+
+            pvNoNumber.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_NoNumber:' + mDays[d]) ? rs['PV:Hash_NoNumber:' + mDays[d]] : 0, 10));
+
+            pvJump.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Jump:' + mDays[d]) ? rs['PV:Hash_Jump:' + mDays[d]] : 0, 10));
+            uvJump.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('UV:Set_Jump:' + mDays[d]) ? rs['UV:Set_Jump:' + mDays[d]] : 0, 10));
+
+            pvClick21.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Click21:' + mDays[d]) ? rs['PV:Hash_Click21:' + mDays[d]] : 0, 10));
+            uvClick21.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('UV:Set_Click21:' + mDays[d]) ? rs['UV:Set_Click21:' + mDays[d]] : 0, 10));
+
+            pvClick22.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Click22:' + mDays[d]) ? rs['PV:Hash_Click22:' + mDays[d]] : 0, 10));
+            uvClick22.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('UV:Set_Click22:' + mDays[d]) ? rs['UV:Set_Click22:' + mDays[d]] : 0, 10));
+
+            pvOrderOK21.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Order_OK:21:' + mDays[d]) ? rs['PV:Hash_Order_OK:21:' + mDays[d]] : 0, 10));
+            pvOrderOK22.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Order_OK:22:' + mDays[d]) ? rs['PV:Hash_Order_OK:22:' + mDays[d]] : 0, 10));
+            
+            pvPresentOK21.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Present_OK:21:' + mDays[d]) ? rs['PV:Hash_Present_OK:21:' + mDays[d]] : 0, 10));
+            pvPresentOK22.push(rs == null ? 0 : parseInt(rs.hasOwnProperty('PV:Hash_Present_OK:22:' + mDays[d]) ? rs['PV:Hash_Present_OK:22:' + mDays[d]] : 0, 10));
+          }
+//-------------------------PV HighCharts
+       $('#PVcontainer').highcharts({
+               chart: {
+                   type: 'column'
+               },
+               title: {
+                   text: '春节订购统计'
+               },
+               subtitle: {
+                   text: '按日统计'
+               },
+               xAxis: {
+                   categories:mDays
+               },
+               yAxis: {
+                   min: 0,
+                   title: {
+                       text: '次数'
+                   }
+               },
+               tooltip: {
+                   headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                   pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                       '<td style="padding:0"><b>{point.y:.0f} 次</b></td></tr>',
+                   footerFormat: '</table>',
+                   shared: true,
+                   useHTML: true
+               },
+               plotOptions: {
+                   column: {
+                       pointPadding: 0.2,
+                       borderWidth: 0
+                   }
+               },
+               series: [
+                {
+                    name: 'AccessPV',
+                    data: pvAccess
+                },{
+                    name: 'AccessUV',
+                    data: uvAccess
+                },{
+                    name: '不能解析号码',
+                    data: pvNoNumber
+                },{
+                    name: '跳转PV',
+                    data: pvJump
+                },{
+                    name: '跳转UV',
+                    data: uvJump
+                },{ 
+                    name: '点击Type21PV',
+                    data: pvClick21
+                },{ 
+                    name: '点击Type21UV',
+                    data: uvClick21
+                },{ 
+                    name: '点击Type22PV',
+                    data: pvClick22
+                },{ 
+                    name: '点击Type22UV',
+                    data: uvClick22
+                },{  
+                    name: '成功订单Type21',
+                    data: pvOrderOK21
+                },{ 
+                    name: '成功订单Type22',
+                    data: pvOrderOK22
+                },{ 
+                    name: '赠送成功Type21',
+                    data: pvPresentOK21
+                },{ 
+                    name: '赠送成功Type22',
+                    data: pvPresentOK22
+                }
+               ]
+           });  //End of highcharts
+
+    });
+//------------------------Clock
+/**
+   * Get the current time
+   */
+  function getNow () {
+      var now = new Date();
+          
+      return {
+          hours: now.getHours() + now.getMinutes() / 60,
+          minutes: now.getMinutes() * 12 / 60 + now.getSeconds() * 12 / 3600,
+          seconds: now.getSeconds() * 12 / 60
+      };
+  };
+  
+  /**
+   * Pad numbers
+   */
+  function pad(number, length) {
+    // Create an array of the remaining length +1 and join it with 0's
+    return new Array((length || 2) + 1 - String(number).length).join(0) + number;
+  }
+  
+  var now = getNow();
+  
+  // Create the chart
+  $('#Clockcontainer').highcharts({
+  
+      chart: {
+          type: 'gauge',
+          plotBackgroundColor: null,
+          plotBackgroundImage: null,
+          plotBorderWidth: 0,
+          plotShadow: false,
+          height: 200
+      },
+      
+      credits: {
+          enabled: false
+      },
+      
+      title: {
+        text: ''
+      },
+      
+      pane: {
+        background: [{
+          // default background
+        }, {
+          // reflex for supported browsers
+          backgroundColor: Highcharts.svg ? {
+            radialGradient: {
+              cx: 0.5,
+              cy: -0.4,
+              r: 1.9
+            },
+            stops: [
+              [0.5, 'rgba(255, 255, 255, 0.2)'],
+              [0.5, 'rgba(200, 200, 200, 0.2)']
+            ]
+          } : null
+        }]
+      },
+      
+      yAxis: {
+          labels: {
+              distance: -20
+          },
+          min: 0,
+          max: 12,
+          lineWidth: 0,
+          showFirstLabel: false,
+          
+          minorTickInterval: 'auto',
+          minorTickWidth: 1,
+          minorTickLength: 5,
+          minorTickPosition: 'inside',
+          minorGridLineWidth: 0,
+          minorTickColor: '#666',
+  
+          tickInterval: 1,
+          tickWidth: 2,
+          tickPosition: 'inside',
+          tickLength: 10,
+          tickColor: '#666',
+          title: {
+              text: 'Powered by<br/>www.wukong.com',
+              style: {
+                  color: '#BBB',
+                  fontWeight: 'normal',
+                  fontSize: '8px',
+                  lineHeight: '10px'                
+              },
+              y: 10
+          }       
+      },
+      
+      tooltip: {
+        formatter: function () {
+          return this.series.chart.tooltipText;
+        }
+      },
+  
+      series: [{
+          data: [{
+              id: 'hour',
+              y: now.hours,
+              dial: {
+                  radius: '60%',
+                  baseWidth: 4,
+                  baseLength: '95%',
+                  rearLength: 0
+              }
+          }, {
+              id: 'minute',
+              y: now.minutes,
+              dial: {
+                  baseLength: '95%',
+                  rearLength: 0
+              }
+          }, {
+              id: 'second',
+              y: now.seconds,
+              dial: {
+                  radius: '100%',
+                  baseWidth: 1,
+                  rearLength: '20%'
+              }
+          }],
+          animation: false,
+          dataLabels: {
+              enabled: false
+          }
+      }]
+  }, 
+                                   
+  // Move
+  function (chart) {
+      setInterval(function () {
+          var hour = chart.get('hour'),
+              minute = chart.get('minute'),
+              second = chart.get('second'),
+              now = getNow(),
+              // run animation unless we're wrapping around from 59 to 0
+              animation = now.seconds == 0 ? 
+                  false : 
+                  {
+                      easing: 'easeOutElastic'
+                  };
+                  
+          // Cache the tooltip text
+          chart.tooltipText = 
+        pad(Math.floor(now.hours), 2) + ':' + 
+          pad(Math.floor(now.minutes * 5), 2) + ':' + 
+          pad(now.seconds * 5, 2);
+          
+          hour.update(now.hours, true, animation);
+          minute.update(now.minutes, true, animation);
+          second.update(now.seconds, true, animation);
+          
+      }, 1000);
+  
+  });
+//------------------------Clock
+});
+//------------------------Clock
+// Extend jQuery with some easing (copied from jQuery UI)
+$.extend($.easing, {
+  easeOutElastic: function (x, t, b, c, d) {
+    var s=1.70158;var p=0;var a=c;
+    if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+    if (a < Math.abs(c)) { a=c; var s=p/4; }
+    else var s = p/(2*Math.PI) * Math.asin (c/a);
+    return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+  }
+});
+//------------------------Clock
+    </script>
+  </head>
+  <body>
+<script src="highcharts/highcharts.js"></script>
+<script src="highcharts/exporting.js"></script>
+<script src="highcharts/highcharts-more.js"></script>
+
+<div id="Clockcontainer" style="min-width: 310px; height: 180px; margin: 0 auto"></div>
+<div id="PVcontainer" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+<div style="min-width:200px; height:20px;text-align:center;margin-top:10px;"><a href='http://x.zj189.cn/chunjie/statisticsData'>数据源点这里~~~</a></div>
+  </body>
+</html>
+

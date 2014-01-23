@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no" name="viewport" id="viewport" />
+<link href="css/chunj_style.css" type="text/css" rel="stylesheet">
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<title>浙江电信</title>
+</head>
+
+<body>
+<div class="header">
+	<div class="header_left"><a href="#"><strong>&lt;&lt;</strong>返回</a></div>
+	<div class="header_center"><a>春节活动</a></div>
+    <div class="header_right"><a href="http://x.zj189.cn/chunjie/">主页<strong>&gt;&gt;</strong></a></div>
+</div>
+<div class="mainbox">
+    <div class="qrdg_main">
+    	<span>
+            <b>尊敬的<i id="phoneHided"></i>用户，<font id="when"></font>好：</b>
+            <em>是否确认订购<i id='flowDesc'>ddg</i>春节7天包？</em>
+            <a href="#" class="queren"><img src="images/queren.png" onclick="submitForm()"></a>
+            <a href="javascript:history.back();" class="queren"><img src="images/quxiao.png"></a>
+        </span>
+ 
+    </div>
+</div>
+<div class="bottom_box"><div class="bottom"><a href="#top">TOP▲</a><br>
+中国电信版权所有【浙ICP备12014759号-1】</div></div>
+<form id="myForm" action="./execOrder" method="post">
+    <input id="phoneNumber" name="phone" type="hidden" />
+    <input id="orderType" name="type" type="hidden" />
+</form>
+
+<div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title" id="myModalLabel">请获取手机验证码后继续当前操作~~</h4>
+      </div>
+
+      <div class="modal-body">
+          <p><font id='time' color="#ff0000">5</font>&nbsp;秒后将跳转至获取验证码页面...</p>
+      </div>
+
+      <!--<div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" ng-click='submitAdvise()'>提交</button>
+      </div>-->
+
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script src="js/bootstrap.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var orderType = sessionStorage.getItem('OrderType');
+    var flowDesc = sessionStorage.getItem('FlowDesc');
+    var phoneNumber = sessionStorage.getItem('PhoneNumber');
+    var ttlInfo = sessionStorage.getItem('TTLInfo');
+    var userSecret = sessionStorage.getItem('UserSecret');
+
+//    alert(orderType + ' -- ' + flowDesc + ' -- ' + phoneNumber + ' -- ' + ttlInfo + ' -- ' + userSecret);
+
+    document.getElementById('phoneHided').innerText = phoneNumber == 'redirect' ? '浙江电信' : phoneNumber.substr(0, 3) + '****' + phoneNumber.substr(7);
+    document.getElementById('when').innerText = new Date().getHours() > 18 ? "晚上" : (new Date().getHours() > 10 ? "下午" : "早上");
+    document.getElementById('flowDesc').innerText = flowDesc;
+    
+
+    //确认订购
+    function submitForm(){
+        if(phoneNumber !== 'redirect'){     //已经获取手机号码
+//跳转有可能超时   改用弹窗形式
+//            document.getElementById('phoneNumber').value = phoneNumber;
+//            document.getElementById('orderType').value = orderType;
+//            document.getElementById('myForm').submit();    
+            $.post('execOrder', {phone : phoneNumber, type : orderType}, function(data){
+                alert(data);        
+            });
+            return;
+        }else{
+            console.log("Secret:  " + userSecret);
+            $('#myModal').modal('show');
+            var ttl = $('#time').text().trim();
+
+            setInterval(function(){
+                ttl--;
+                $('#time').text(ttl);
+
+                if(ttl === 1){
+                    $('#myModal').modal('hide');
+                }
+
+                if(ttl === 0){
+                    $.post('markTTL', {userSecret : userSecret, info : orderType + '-' + flowDesc, expire : 300}, function(data){
+ //                       alert('markTTL Result: ' + data);
+                        window.location = "http://login.zj189.cn/sso/login.jsp?goto=http://x.zj189.cn/chunjie/";
+                    });
+                }
+            }, 1000); //End of interval
+        }
+    };
+    
+</script>
+</body>
+</html>
